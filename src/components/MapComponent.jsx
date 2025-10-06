@@ -1,27 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { GoogleMap, LoadScript, Marker, DirectionsRenderer } from "@react-google-maps/api";
 
 const MapComponent = () => {
   const [directions, setDirections] = useState(null);
+  const [error, setError] = useState("");
 
   const mapContainerStyle = { height: "500px", width: "100%" };
-  const center = { lat: 40.7128, lng: -74.0060 };
+  // Centered in Texas
+  const center = { lat: 31.9686, lng: -99.9018 };
 
-  const getDirections = () => {
+  const getDirections = useCallback(() => {
+    setError("");
+    if (!window.google || !window.google.maps) {
+      setError("Google Maps API is not loaded yet. Please try again in a moment.");
+      return;
+    }
     const directionsService = new window.google.maps.DirectionsService();
     directionsService.route(
       {
-        origin: "New York, NY",
-        destination: "Washington, DC",
+        origin: "Dallas, TX",
+        destination: "Houston, TX",
         travelMode: window.google.maps.TravelMode.DRIVING,
       },
       (result, status) => {
-        if (status === window.google.maps.DirectionsStatus.OK) {
+        if (status === "OK") {
           setDirections(result);
+        } else {
+          setDirections(null);
+          setError("Directions request failed: " + status);
         }
       }
     );
-  };
+  }, []);
 
   return (
     <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
@@ -31,6 +41,9 @@ const MapComponent = () => {
       </GoogleMap>
       <div style={{ marginTop: "10px" }}>
         <button onClick={getDirections}>Get Directions</button>
+        {error && (
+          <div style={{ color: 'red', marginTop: '10px' }}>{error}</div>
+        )}
       </div>
     </LoadScript>
   );
