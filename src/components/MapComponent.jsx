@@ -1,50 +1,60 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { GoogleMap, LoadScript, Marker, DirectionsRenderer } from "@react-google-maps/api";
 
+const libraries = ["places"];
+
 const MapComponent = () => {
-  const [directions, setDirections] = useState(null);
-  const [error, setError] = useState("");
+  const [origin, setOrigin] = useState("Dallas");
+  const [destination, setDestination] = useState("Houston");
+  const [pins, setPins] = useState([]); // Array of pin positions
+  const cities = [
+    { name: "Arlington", lat: 32.7357, lng: -97.1081 },
+    { name: "Houston", lat: 29.7604, lng: -95.3698 },
+    { name: "Dallas", lat: 32.7767, lng: -96.7970 },
+    { name: "Austin", lat: 30.2672, lng: -97.7431 },
+    { name: "San Antonio", lat: 29.4241, lng: -98.4936 },
+    { name: "El Paso", lat: 31.7619, lng: -106.4850 },
+    { name: "Fort Worth", lat: 32.7555, lng: -97.3308 },
+  ];
 
-  const mapContainerStyle = { height: "500px", width: "100%" };
-  // Centered in Texas
-  const center = { lat: 31.9686, lng: -99.9018 };
+  const getLatLng = (cityName) => {
+    const city = cities.find(c => c.name === cityName);
+    return city ? { lat: city.lat, lng: city.lng } : { lat: 31.9686, lng: -99.9018 };
+  };
 
-  const getDirections = useCallback(() => {
-    setError("");
-    if (!window.google || !window.google.maps) {
-      setError("Google Maps API is not loaded yet. Please try again in a moment.");
-      return;
-    }
-    const directionsService = new window.google.maps.DirectionsService();
-    directionsService.route(
-      {
-        origin: "Dallas, TX",
-        destination: "Houston, TX",
-        travelMode: window.google.maps.TravelMode.DRIVING,
-      },
-      (result, status) => {
-        if (status === "OK") {
-          setDirections(result);
-        } else {
-          setDirections(null);
-          setError("Directions request failed: " + status);
-        }
-      }
-    );
-  }, []);
+
+
+  const mapContainerStyle = {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100vw",
+    height: "100vh",
+    zIndex: 0
+  };
+  // Centered on UT Arlington
+  const center = { lat: 32.7318, lng: -97.1106 };
+  const defaultZoom = 15;
+
+
 
   return (
-    <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
-      <GoogleMap mapContainerStyle={mapContainerStyle} center={center} zoom={7}>
-        <Marker position={center} />
-        {directions && <DirectionsRenderer directions={directions} />}
+    <LoadScript
+      googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+    >
+      <GoogleMap
+        mapContainerStyle={mapContainerStyle}
+        center={center}
+        zoom={defaultZoom}
+        onClick={e => {
+          setPins([...pins, { lat: e.latLng.lat(), lng: e.latLng.lng() }]);
+        }}
+      >
+        {pins.map((pin, idx) => (
+          <Marker key={idx} position={pin} />
+        ))}
       </GoogleMap>
-      <div style={{ marginTop: "10px" }}>
-        <button onClick={getDirections}>Get Directions</button>
-        {error && (
-          <div style={{ color: 'red', marginTop: '10px' }}>{error}</div>
-        )}
-      </div>
+  {/* Dropdowns removed. Only map and pins remain. */}
     </LoadScript>
   );
 };
