@@ -1,8 +1,9 @@
 import React from 'react'
+import MapComponent from './components/MapComponent'
 
 const App = () => {
   return (
-    <div>hello</div>
+    <MapComponent/>
   )
 }
 
